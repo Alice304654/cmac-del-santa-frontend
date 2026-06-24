@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.DS_Store
+*.log
+.vite
+__pycache__/
+.env
+venv/
+.venv/
