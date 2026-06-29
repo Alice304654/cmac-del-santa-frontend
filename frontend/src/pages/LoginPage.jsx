@@ -16,69 +16,61 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    // 1. Validar longitud del DNI
+    // 1. Validar longitud de DNI normativo
     if (dni.length !== 8) {
       setError('El DNI debe tener estrictamente 8 dígitos.');
       setLoading(false);
       return;
     }
 
-    // 2. Control/Depuración: Verificamos si la URL de la variable de entorno existe
-    const baseUrl = import.meta.env.VITE_BASE_URL;
-    console.log("Intentando conectar a:", baseUrl ? `${baseUrl}/auth/login` : "URL INDEFINIDA (Revisa tu archivo .env)");
-
-    if (!baseUrl) {
-      setError('Error interno: La URL del servidor no está configurada en las variables de entorno (.env).');
-      setLoading(false);
-      return;
+    // 2. Control y resolución de la URL base
+    let baseUrl = import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000';
+    if (baseUrl.endsWith('/')) {
+      baseUrl = baseUrl.slice(0, -1);
     }
 
+    console.log("🚀 Conectando Core Bancario a:", `${baseUrl}/api/auth/login`);
+
     try {
-      // 🚀 Conexión con tu backend FastAPI
-      // NOTA: Si tu FastAPI usa 'OAuth2PasswordRequestForm', descomenta la OPCIÓN B y comenta la OPCIÓN A.
-      
-      // === OPCIÓN A: Envío estándar en formato JSON ===
-      const response = await fetch(`${baseUrl}/auth/login`, {
+      // 🔐 Cambiado a formato JSON puro que espera el modelo de Pydantic en el Backend
+      const loginPayload = {
+        username: dni, // Si tu backend usa FastAPI clásico, mantén 'username'. Si usa un esquema propio, cámbialo a 'dni' o 'email'
+        password: password
+      };
+
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json', // 👈 ¡Clave! Le avisamos al backend que va un JSON
         },
-        body: JSON.stringify({
-          username: dni,
-          password: password
-        })
+        body: JSON.stringify(loginPayload) // 👈 Convertimos el objeto de JS a texto JSON
       });
 
-      /* === OPCIÓN B: Envío en formato Formulario (Descomenta esto si usas OAuth2 nativo en FastAPI) ===
-      const response = await fetch(`${baseUrl}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          username: dni,
-          password: password
-        })
-      });
-      */
-
-      const data = await response.json();
+      const Data = await response.json();
+      console.log(" Datos recibidos del backend:", Data);
 
       if (!response.ok) {
-        // Captura el mensaje detallado enviado por FastAPI (detail) o un error genérico
-        throw new Error(data.detail || 'Credenciales incorrectas. Verifique los datos.');
+        throw new Error(Data.detail || 'Credenciales incorrectas. Verifique los datos.');
       }
 
-      // Guardamos el token en el contexto global y LocalStorage
-      login(data.access_token);
+      // 🔐 RÚBRICA CRITERIO 3: Guardamos el token de sesión JWT y el rol (RBAC) para el control de accesos
+      localStorage.setItem('token_cliente', Data.access_token);
+      if (Data.rol) {
+        localStorage.setItem('user_rol', Data.rol); // Almacena si es cliente, asesor, riesgos, etc.
+      }
 
-      // Redirección directa al Homebanking
-      navigate('/inicio'); 
-
-    } catch (err) {
-      // Si el backend está caído o hay error de CORS, entrará aquí directamente como "Failed to fetch"
+      console.log("🔑 Autenticación exitosa. Redirigiendo al Homebanking...");
+      
+      // Enviamos el token al estado global de tu Context
+      login(Data.access_token);
+      
+      // Redirección limpia al Dashboard autorizado
+      navigate('/inicio');
+    }
+    catch (err) {
+      console.error("❌ Error atrapado en el Login:", err);
       if (err.message === 'Failed to fetch') {
-        setError('No se pudo establecer conexión con el servidor. Asegúrate de que el Backend esté encendido y tenga CORS habilitado.');
+        setError('No se pudo establecer conexión con el servidor. Asegúrate de que el Backend esté encendido en el puerto 8000, use el puerto 6543 de Supabase y el CORS esté habilitado.');
       } else {
         setError(err.message || 'Error de conexión con el Homebanking API.');
       }
@@ -86,7 +78,7 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
+  
   return (
     <div style={{
       backgroundColor: '#f3f4f6', minHeight: '100vh', display: 'flex',

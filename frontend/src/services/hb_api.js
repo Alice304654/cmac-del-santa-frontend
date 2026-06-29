@@ -1,9 +1,12 @@
 import axios from 'axios'
 
-export const TOKEN_KEY = 'hb_token'
+// 🌟 CORRECCIÓN 1: Unificamos con la clave exacta que usa tu HBAuthContext
+export const TOKEN_KEY = 'token_cliente' 
 export const USER_KEY = 'hb_user'
 
-const baseURL = import.meta.env.VITE_BASE_URL || 'http://localhost:8000'
+// 🌟 CORRECCIÓN 2: Aseguramos el prefijo /api para limpiar todos los 404 de tu backend
+const rawBaseURL = import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'
+const baseURL = rawBaseURL.endsWith('/api') ? rawBaseURL : `${rawBaseURL}/api`
 
 // Instancia central de axios para todo el Homebanking.
 const hbApi = axios.create({
@@ -31,8 +34,7 @@ hbApi.interceptors.response.use(
       const enLogin = window.location.pathname.startsWith('/login')
       localStorage.removeItem(TOKEN_KEY)
       localStorage.removeItem(USER_KEY)
-      // No redirigimos si el propio intento de login fue el que devolvió 401
-      // (para que LoginPage muestre el mensaje "Credenciales inválidas").
+      
       if (!enLogin) {
         window.location.assign('/login')
       }
@@ -42,3 +44,30 @@ hbApi.interceptors.response.use(
 )
 
 export default hbApi
+
+// ==============================================================================
+// 🏦 CAPA DE SERVICIOS ADAPTADA (Conecta tus componentes React con FastAPI)
+// ==============================================================================
+
+// 💸 Criterio 1: Portal de Cuentas y Movimientos (Homebanking)
+export const cuentasService = {
+  obtenerMisCuentas: () => hbApi.get('/cuentas/mis-cuentas'),
+  obtenerMovimientos: (cuentaId) => hbApi.get(`/cuentas/movimientos/${cuentaId}`),
+  administrarEstadoCuenta: (payload) => hbApi.patch('/cuentas/core/cambiar-estado', payload),
+};
+
+// 📝 Criterio 2: Motor de Créditos (Scoring de Riesgo y Canal de Aprobación)
+export const creditosService = {
+  consultarHistorial: () => hbApi.get('/creditos/historial'),
+  solicitarPrestamo: (datosSolicitud) => hbApi.post('/creditos/solicitar', datosSolicitud),
+  evaluarDictamen: (payloadEvaluacion) => hbApi.post('/creditos/evaluar', payloadEvaluacion),
+  ejecutarDesembolso: (creditoId, cuentaDestinoId) => 
+    hbApi.post(`/creditos/desembolsar/${creditoId}`, { cuenta_destino_id: cuentaDestinoId }),
+};
+
+// 🚦 Criterio 4: Módulo de Recuperaciones y Gestión de Mora
+export const recuperacionesService = {
+  obtenerCarteraMora: () => hbApi.get('/recuperaciones/mora'),
+  registrarAccionCobranza: (payloadGestion) => hbApi.post('/recuperaciones/gestionar', payloadGestion),
+  procesarCambioBandaCritico: (payloadTransicion) => hbApi.post('/recuperaciones/cambiar-estado', payloadTransicion),
+};

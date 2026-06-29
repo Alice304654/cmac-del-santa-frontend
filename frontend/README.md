@@ -1,7 +1,7 @@
 # Caja del Santa — Banca por Internet (Homebanking)
 
 Portal del **cliente final** de Caja del Santa, construido en **React 18 + Vite (JavaScript)**.
-Consume el backend FastAPI del Homebanking que corre en `http://localhost:8000`.
+Consume el backend FastAPI del Homebanking que corre en `http://127.0.0.1:8000`.
 
 > Identidad visual de **Caja del Santa**: isotipo de flor andina multicolor, paleta del textil
 > andino (rojo `#e2132b`, magenta, turquesa, naranja, morado…), **franja tejida** superior,
@@ -12,7 +12,7 @@ Consume el backend FastAPI del Homebanking que corre en `http://localhost:8000`.
 ## Requisitos
 
 - Node.js 18+ (probado con Node 24)
-- El backend FastAPI del Homebanking corriendo en `http://localhost:8000`
+- El backend FastAPI del Homebanking corriendo en `http://127.0.0.1:8000`
   (el portal del **personal** usa el puerto `5173`; este portal del **cliente** usa el `5174`).
 
 ## Puesta en marcha
@@ -29,7 +29,7 @@ La app queda disponible en **http://localhost:5174**.
 Copie `.env.example` a `.env` y ajuste si su backend no está en el puerto por defecto:
 
 ```
-VITE_BASE_URL=http://localhost:8000
+VITE_BASE_URL=http://127.0.0.1:8000
 ```
 
 ## Usuario de prueba

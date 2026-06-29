@@ -20,10 +20,11 @@ import CoreBancarioPage from './pages/CoreBancarioPage';
 function PrivateLayout({ children }) {
   return (
     <PrivateRoute>
-      <Header />
       <main className="bbva-main">
-        <div className="bbva-container">{children}</div>
-      </main>
+  <div className="bbva-container">
+    {children}
+  </div>
+</main>
     </PrivateRoute>
   )
 }
@@ -54,7 +55,7 @@ export default function App() {
       <Route path="/core-bancario" element={<PrivateLayout><CoreBancarioPage /></PrivateLayout>} />
 
       {/* Redirección por defecto */}
-      <Route path="*" element={<Navigate to="/inicio" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )
 }

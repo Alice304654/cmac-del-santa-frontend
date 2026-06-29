@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   /* Paleta de marca Banco Andino — colores del textil andino */
   --hb-red: #1d13e2;
